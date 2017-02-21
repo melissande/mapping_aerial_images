@@ -1,0 +1,58 @@
+clear all; close all; clc;
+%% Map Color for Figures
+map=parula(7);
+
+%% Read image
+[image,p] = freadenvit('igalmss');  %read multi spectral image
+nr = p(1);  %# of rows
+nc = p(2);  %# of columns
+nb = p(3);  %# of bands
+X = reshape(image,nr*nc,nb);
+s = rng;    %class numbers will not change with kmeans - use rng(s)!!! right before
+
+%% K-Means different classes *try 2 - 7 classes
+for i=2:7
+k = i;  %class numbers
+rng(s);
+idx = kmeans(X,k);  %k-means method
+idx = reshape(idx,nr,nc);   %reshaping to matrix again
+
+figure(i-1)
+imagesc(idx)
+colormap(map(1:i,1:3))    %discrete colors
+colorbar
+end
+
+
+%% K-Means evaluation of classes
+evaK = evalclusters(X,'kmeans','CalinskiHarabasz','KList',[1:7]);
+K_k = evaK.OptimalK;
+
+%% K-Means for optimum amount of classes
+rng(s);
+idx_opt = kmeans(X,K_k);  %k-means method
+idx_opt = reshape(idx_opt,nr,nc);   %reshaping to matrix again
+
+figure(7)
+imagesc(idx_opt)
+colormap(copper(K_k))
+colorbar
+
+%% PCA
+X_pca = column_centering(X);
+X_pca = pca_function(X_pca);
+
+% why does it not work?
+% rng('default');  % For reproducibility
+% evaK_pca = evalclusters(X_pca,'kmeans','CalinskiHarabasz','KList',[1:10]);
+% K_k_pca = evaK_pca.OptimalK;
+K_k_pca = 5;
+
+rng(s);
+idx_pca = kmeans(X_pca,K_k_pca);  %k-means method
+idx_pca = reshape(idx_pca,nr,nc);   %reshaping to matrix again
+
+figure(8)
+imagesc(idx_pca)
+colormap(copper(K_k_pca))
+colorbar
